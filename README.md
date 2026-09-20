@@ -35,8 +35,7 @@ allow / ask / block gate:
   </a>
 </p>
 <p align="center">
-  <sub>GIF preview above · <a href="docs/jev-firewall-demo.mp4">▶ full-quality MP4</a> (click the frame or the link)
-  — the demo is a Remotion project in <a href="jev-firewall-demo/">jev-firewall-demo/</a>.</sub>
+  <sub>GIF preview above · <a href="docs/jev-firewall-demo.mp4">▶ full-quality MP4</a> (click the frame or the link).</sub>
 </p>
 
 ## Table of contents
