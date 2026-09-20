@@ -39,7 +39,6 @@ platform's payload in and its decision vocabulary out (`permissionDecision: allo
 - [Known limitations](#known-limitations)
 - [Development](#development)
 - [Contributing](#contributing)
-- [License](#license)
 
 ## Quick start
 
@@ -354,7 +353,3 @@ Contributions are welcome!
 
 If you're adding a new platform adapter, start from `src/claude-adapter.ts` — the core must stay
 platform-agnostic (see [Design principles](#design-principles)).
-
-## License
-
-[MIT](LICENSE) © Koushik Dey
