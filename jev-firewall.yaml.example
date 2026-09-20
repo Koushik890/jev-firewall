@@ -1,0 +1,39 @@
+# jev-firewall configuration
+# Copy to jev-firewall.yaml (repo root) or ~/.jev-firewall.yaml to customize.
+# Everything here has safe defaults — the firewall runs fine with no config file.
+
+# Posture for actions decided without the model (only when mode: rules).
+# The model itself always answers allow/ask/block with a confidence.
+default: ask
+
+# Model confidence below this is treated as "not sure" and sent to a human.
+ask_below: 0.7
+
+# User-delegated allows: matched BEFORE the model, never re-verified.
+# Only read-only commands belong here. Keep this list tiny.
+safe_commands:
+  - pwd
+  - ls
+  - cat
+  - head
+  - tail
+  - grep
+  - rg
+  - find
+  - which
+  - node --version
+  - npm test
+  - npm run build
+  - git status
+  - git log
+  - git diff
+
+# Regex patterns over the action string — a match blocks, no questions asked.
+blocked_paths:
+  - '(^|[/\\])\.ssh([/\\]|$)'
+  - '(^|[/\\])\.aws([/\\]|$)'
+
+# Basenames that may never appear in any agent action.
+protected_files:
+  - .env
+  - credentials.json

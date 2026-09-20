@@ -1,0 +1,49 @@
+{
+  "name": "jev-firewall",
+  "version": "0.2.0",
+  "description": "A real-time firewall for AI coding agents: every tool call is checked (deterministic rules + the Jev decision model) before it reaches your machine. One command wires it into Claude Code and Codex.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Koushik Dey",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Koushik890/jev-firewall.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Koushik890/jev-firewall/issues"
+  },
+  "homepage": "https://github.com/Koushik890/jev-firewall#readme",
+  "bin": {
+    "jev-firewall": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/test/smoke.test.js dist/test/codex.test.js dist/test/adversarial.test.js dist/test/grammar.test.js dist/test/jev-model.test.js dist/test/setup.test.js",
+    "doctor": "npm run build && node dist/doctor.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "claude-code",
+    "codex",
+    "ai-agent",
+    "security",
+    "firewall",
+    "hooks"
+  ],
+  "files": [
+    "dist",
+    "jev-firewall.yaml.example",
+    ".env.example"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.6.0"
+  },
+  "dependencies": {
+    "tree-sitter-bash": "^0.25.1",
+    "web-tree-sitter": "^0.27.0"
+  }
+}
