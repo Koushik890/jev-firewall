@@ -20,6 +20,7 @@
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test dist/test/smoke.test.js dist/test/codex.test.js dist/test/adversarial.test.js dist/test/grammar.test.js dist/test/jev-model.test.js dist/test/setup.test.js",
     "doctor": "npm run build && node dist/doctor.js",
+    "bench": "npm run build && node dist/bench.js",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

@@ -323,8 +323,14 @@ details are private first.
 npm install
 npm test        # 104 tests, node:test (grammar engine has one wasm dep)
 npm run doctor  # live model check for the configured provider
+npm run bench   # verify the latency claims above (~30–40 ms cold decision, ~0.5–1 s hook wall)
 node dist/cli.js check claude '<json>'   # one payload through the real pipeline
 ```
+
+`npm run bench` measures what this README claims: the cold per-call decision (fresh grammar
+engine, as each hook process pays) and warm steady-state rules latency, plus the end-to-end
+hook wall time in a throwaway home directory. It exits non-zero when a threshold is breached,
+so a code change that invalidates the numbers fails loudly instead of letting the README lie.
 
 ### Project structure
 
