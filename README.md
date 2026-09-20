@@ -24,8 +24,24 @@ Codex CLI ────▶ PreToolUse hook ──┘          ├─────�
 One core, two thin adapters. Both agents fire a PreToolUse hook; each adapter translates its
 platform's payload in and its decision vocabulary out (`permissionDecision: allow|ask|deny`).
 
+## See it in action
+
+A 55-second walkthrough — from a prompt-injected agent to a decoded exfiltration attempt to the
+allow / ask / block gate:
+
+<p align="center">
+  <a href="docs/jev-firewall-demo.mp4">
+    <img src="docs/jev-firewall-demo.gif" alt="jev-firewall demo: a prompt-injected curl -d @.env is blocked by a deterministic rule, an obfuscated payload is decoded then blocked, and uncertain calls go to a human" width="100%">
+  </a>
+</p>
+<p align="center">
+  <sub>GIF preview above · <a href="docs/jev-firewall-demo.mp4">▶ full-quality MP4</a> (click the frame or the link)
+  — the demo is a Remotion project in <a href="jev-firewall-demo/">jev-firewall-demo/</a>.</sub>
+</p>
+
 ## Table of contents
 
+- [See it in action](#see-it-in-action)
 - [Quick start](#quick-start)
 - [Firewall vs auto mode vs sandbox](#firewall-vs-auto-mode-vs-sandbox)
 - [Shell-aware rules engine](#shell-aware-rules-engine)
@@ -191,7 +207,8 @@ Notes:
   `zdr:unavailable`. Set `JEVD_ZDR=0` to skip the doomed round trip. The direct TypeSafe path has
   no ZDR field.
 - Live Jev adds roughly 100–500 ms per unmatched action. Rules-blocked and safe-listed commands
-  never touch the network and stay in the low milliseconds.
+  never touch the network and decide in ~30–40 ms in-process; the ~0.5–1 s wall every hook call
+  pays is Node process start, not decision time.
 
 ## CLI reference
 
@@ -244,7 +261,7 @@ safe defaults with no config file.
 | `mode`             | `model`                 | `model` decides unmatched actions; `rules` falls back to `default` |
 | `default`          | `ask`                   | Posture for actions decided without the model (rules mode) |
 | `ask_below`        | `0.7`                   | Model `allow` below this confidence becomes `ask`    |
-| `safe_commands`    | small read-only list    | User-delegated allows, checked before the model      |
+| `safe_commands`    | small safe list         | User-delegated allows, checked before the model      |
 | `blocked_paths`    | `.ssh`, `.aws`          | Regex over the action string → block                 |
 | `protected_files`  | `.env`, `credentials.json` | Basename in **any** token → block                 |
 
@@ -279,7 +296,7 @@ One JSON line per decision at `~/.jev-firewall/log.jsonl`:
 Found a bypass, a fail-open path, or a false negative? Please report it responsibly:
 
 - **Preferred:** open a [private security advisory](https://github.com/Koushik890/jev-firewall/security/advisories/new) on GitHub.
-- **Or** email the maintainer directly (address in [`package.json`](package.json) / git history).
+- **Or** email the maintainer directly (address in the git commit history).
 
 Please don't open a public issue with working exploit details — a fix lands faster when the
 details are private first.
@@ -288,9 +305,10 @@ details are private first.
 
 - No key → rules-only posture: safe-listed commands pass, protected files block, everything else
   asks. The audit log's `"model":"none"` makes the degraded state obvious.
-- Live Jev adds a ~100–500 ms round trip to unmatched actions (wall ~0.5–1 s including process
-  start). Rules-blocked and safe-listed commands never touch the network and stay in the low
-  milliseconds.
+- Every hook call pays Node process start — ~0.5–1 s wall per decision, measured on a dev
+  machine — before any model round trip (~100–500 ms for unmatched actions). Rules-blocked and
+  safe-listed commands never touch the network and their in-process decision takes ~30–40 ms,
+  but the per-call process start applies either way.
 - The grammar engine covers the bash language proper; aliases, traps, and shell functions defined
   mid-session remain outside static analysis. The designed failure mode for anything unseen is
   ASK (or BLOCK via the model), never a silent allow.
