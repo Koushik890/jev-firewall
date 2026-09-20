@@ -134,6 +134,10 @@ test("validateKey: network failure is an honest no", async () => {
 
 test("setup: full flow — provider choice, key validation, save, install for detected agents", async () => {
   const home = tempHome("jevd-setup-");
+  // Markers under the temp home make detection deterministic — CI runners have
+  // no claude/codex on PATH, and detection must not depend on the host.
+  mkdirSync(path.join(home, ".claude"), { recursive: true });
+  mkdirSync(path.join(home, ".codex"), { recursive: true });
   const answers = ["2", "vck_test_key_123", ""]; // gateway, key, install-for-all
   const lines: string[] = [];
   try {
@@ -166,8 +170,14 @@ test("setup: a rejected key writes nothing and exits non-zero", async () => {
 });
 
 test("setup: --yes with no prompts installs for every detected agent", async () => {
+  // Explicit temp home with markers: detection is deterministic, and --yes
+  // writes its key there instead of ever touching the developer's real home.
+  const home = tempHome("jevd-setup-yes-");
+  mkdirSync(path.join(home, ".claude"), { recursive: true });
+  mkdirSync(path.join(home, ".codex"), { recursive: true });
   const lines: string[] = [];
   const code = await runSetup({
+    home,
     provider: "gateway",
     key: "k",
     yes: true,
