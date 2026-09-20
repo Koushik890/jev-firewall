@@ -40,5 +40,9 @@ export async function runDoctor(): Promise<number> {
 
 // Invoked directly: node dist/doctor.js (or: npm run doctor)
 if (process.argv[1] && /doctor\.[cm]?js$/.test(process.argv[1])) {
-  runDoctor().then((code) => process.exit(code));
+  // Drain naturally (see cli.ts): process.exit() during undici teardown trips
+  // a libuv assertion on Windows and replaces the exit code with 127.
+  runDoctor().then((code) => {
+    process.exitCode = code;
+  });
 }

@@ -10,6 +10,7 @@ import { StubModel } from "./stub-model.js";
 import { check, combine } from "../decide.js";
 import { actionFromClaude, claudeResponse } from "../claude-adapter.js";
 import { startClaudeHook } from "../index.js";
+import { parsePayload } from "../payload.js";
 import type { AgentAction, FirewallVerdict, Contribution } from "../types.js";
 
 function action(command: string, tool = "bash"): AgentAction {
@@ -157,6 +158,19 @@ test("hook loop: end-to-end stdin/stdout, one JSON decision per event", async ()
   assert.equal(first.hookSpecificOutput.permissionDecision, "block");
   assert.equal(second.hookSpecificOutput.permissionDecision, "allow");
   await done;
+});
+
+test("payload: quote-stripped PowerShell argument gets a self-diagnosing error", () => {
+  // What Windows PowerShell 5.1 actually delivers to node when you paste JSON as an argument.
+  assert.throws(() => parsePayload('{tool_name:Bash,tool_input:{command:ls},cwd:.}'), /PowerShell/);
+  assert.throws(() => parsePayload('{tool_name:Bash,tool_input:{command:ls},cwd:.}'), /stdin/);
+  // Properly quoted JSON parses fine.
+  assert.deepEqual(parsePayload('{"tool_name":"Bash"}'), { tool_name: "Bash" });
+});
+
+test("payload: any other invalid JSON stays an honest, generic error", () => {
+  assert.throws(() => parsePayload('{"tool_name":"Bash",}'), /not valid JSON/);
+  assert.throws(() => parsePayload('not json at all'), /not valid JSON/);
 });
 
 test("tmp config file loads through JEVD_CONFIG", async () => {

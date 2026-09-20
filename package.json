@@ -1,6 +1,6 @@
 {
   "name": "jev-firewall",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A real-time firewall for AI coding agents: every tool call is checked (deterministic rules + the Jev decision model) before it reaches your machine. One command wires it into Claude Code and Codex.",
   "type": "module",
   "license": "MIT",

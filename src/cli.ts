@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import { createFirewall, checkAction, startClaudeHook, startCodexHook, finalReason, type HookAdapter, claudeHookAdapter, codexHookAdapter } from "./index.js";
-import { actionFromClaude } from "./claude-adapter.js";
-import { actionFromCodex } from "./codex-adapter.js";
+import { actionFromClaude, type ClaudeHookInput } from "./claude-adapter.js";
+import { actionFromCodex, type CodexHookInput } from "./codex-adapter.js";
 import { detectAgents, installPlatform, type Platform } from "./install.js";
 import { runSetup } from "./setup.js";
+import { parsePayload } from "./payload.js";
 import { collectStatus, formatStatus } from "./status.js";
 import { readFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
@@ -50,7 +51,7 @@ async function main(): Promise<number> {
       const arg = rest[0] === "claude" || rest[0] === "codex" ? rest[1] : rest[0];
       const raw = arg ?? readFileSync(0, "utf8");
       const firewall = await createFirewall();
-      const payload = JSON.parse(raw);
+      const payload = platform === "codex" ? parsePayload<CodexHookInput>(raw) : parsePayload<ClaudeHookInput>(raw);
       const action = platform === "codex" ? actionFromCodex(payload) : actionFromClaude(payload);
       const verdict = await checkAction(firewall, action);
       console.log(JSON.stringify(verdict, null, 2));
@@ -155,9 +156,17 @@ async function showLogs(n: number): Promise<number> {
 }
 
 main().then(
-  (code) => process.exit(code),
+  (code) => {
+    // process.exitCode + a natural drain, never process.exit(): tearing down
+    // while undici's keep-alive sockets close trips a libuv assertion on
+    // Windows ("Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)") and
+    // corrupts the exit code (127 instead of the block→2 contract). The hook
+    // entrypoint (agent-hook.ts) already exits this way; draining measured
+    // no keep-alive linger.
+    process.exitCode = code ?? 0;
+  },
   (err) => {
     console.error("jev-firewall:", err instanceof Error ? err.message : err);
-    process.exit(1);
+    process.exitCode = 1;
   },
 );

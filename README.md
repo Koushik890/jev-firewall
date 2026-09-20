@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/jev-firewall.svg)](https://www.npmjs.com/package/jev-firewall)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![node](https://img.shields.io/badge/node-%E2%89%A520-brightgreen.svg)](https://nodejs.org)
-[![tests](https://img.shields.io/badge/tests-102%20passing-success.svg)](#development)
+[![tests](https://img.shields.io/badge/tests-104%20passing-success.svg)](#development)
 
 > **A real-time firewall for AI coding agents — every tool call is checked before it reaches your computer.**
 
@@ -201,7 +201,7 @@ Notes:
 | `jev-firewall install [claude\|codex]`   | Wire the PreToolUse hook into every detected agent (or just one)          |
 | `jev-firewall status`                    | Static wiring report: model, per-agent hook status, audit log             |
 | `jev-firewall doctor`                    | Live check: key → provider API → one real decision                        |
-| `jev-firewall check [claude\|codex] '<json>'` | Push one hook payload through the real pipeline                      |
+| `jev-firewall check [claude\|codex] '<json>'` | Push one hook payload through the real pipeline (or pipe the JSON on stdin — the PowerShell-safe way) |
 | `jev-firewall hook [claude\|codex]`      | Run the PreToolUse hook loop (stdin/stdout)                               |
 | `jev-firewall logs [n]`                  | Tail the audit log (last `n` entries, default 20)                         |
 
@@ -303,7 +303,7 @@ details are private first.
 
 ```bash
 npm install
-npm test        # 102 tests, node:test (grammar engine has one wasm dep)
+npm test        # 104 tests, node:test (grammar engine has one wasm dep)
 npm run doctor  # live model check for the configured provider
 node dist/cli.js check claude '<json>'   # one payload through the real pipeline
 ```
@@ -328,8 +328,9 @@ src/status.ts          static wiring report (model, hooks, audit log)
 src/doctor.ts          live model check for either provider
 src/agent-hook.ts      shared hook entrypoint: agent-hook.js <claude|codex>
 src/index.ts           library entry: createFirewall, checkAction, startHookLoop
+src/payload.ts         `check` payload parsing (self-diagnosing PowerShell hint)
 src/cli.ts             setup | install | status | doctor | check | hook | logs
-src/test/              102 tests: adapters, installers, setup wizard, e2e loops, adversarial, grammar, both providers
+src/test/              104 tests: adapters, installers, setup wizard, e2e loops, adversarial, grammar, both providers
 ```
 
 ### Publishing (maintainers)
@@ -347,7 +348,7 @@ npm publish               # requires an npm account: npm login first
 Contributions are welcome!
 
 1. Fork the repo and create a branch.
-2. `npm install` and `npm test` — keep all 102 tests green, and add tests for any new behavior
+2. `npm install` and `npm test` — keep all 104 tests green, and add tests for any new behavior
    (the adversarial suite is the right home for new bypass scenarios).
 3. Open a pull request with a clear description of the threat model or bug you're addressing.
 
