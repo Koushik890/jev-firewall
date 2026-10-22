@@ -12,7 +12,7 @@ export interface ClaudeHookInput {
 export interface ClaudeHookOutput {
   hookSpecificOutput: {
     hookEventName: "PreToolUse";
-    permissionDecision: Decision;
+    permissionDecision: "allow" | "deny" | "ask";
     permissionDecisionReason: string;
   };
 }
@@ -45,7 +45,7 @@ export function claudeResponse(decision: Decision, reason: string): ClaudeHookOu
   return {
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
-      permissionDecision: decision,
+      permissionDecision: decision === "block" ? "deny" : decision,
       permissionDecisionReason: reason,
     },
   };

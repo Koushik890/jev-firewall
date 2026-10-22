@@ -120,14 +120,32 @@ test("no false positive: env assignment whose VALUE mentions a protected file in
   assert.notEqual(verdict.decision, "block");
 });
 
-test("no false positive: safe compound with a redirect rules-allows", async () => {
-  const { verdict } = await applyRules(action("git status; git diff > /tmp/patch.txt"), DEFAULT_CONFIG);
+test("redirections never inherit a read-only command's automatic allow", async () => {
+  for (const command of [
+    "git status; git diff > /tmp/patch.txt",
+    "git status >/tmp/victim", "git status >> /tmp/victim",
+    "git status 2>/tmp/victim", "git status &>/tmp/victim",
+    "git status < /tmp/private", ">/tmp/victim; git status",
+    "X=1>/tmp/victim git status", "X=1>/tmp/victim; git status",
+    "git status; X=1>/tmp/victim",
+  ]) {
+    const { verdict } = await applyRules(action(command), DEFAULT_CONFIG);
+    assert.notEqual(verdict.decision, "allow", command);
+  }
+  const { verdict } = await applyRules(action("git status; git diff"), DEFAULT_CONFIG);
   assert.equal(verdict.decision, "allow");
 });
 
 test("no false positive: legit pipelines end-to-end allow (model path)", async () => {
   const { verdict } = await checkFull(action("cat package.json | grep name"), DEFAULT_CONFIG, new StubModel());
   assert.equal(verdict.decision, "allow");
+});
+
+test("redirects lost during assignment normalization cannot receive model auto-allow", async () => {
+  for (const command of ["X=1>/tmp/victim; git status", "X=1>/tmp/victim git status"]) {
+    const { verdict } = await checkFull(action(command), DEFAULT_CONFIG, new StubModel());
+    assert.notEqual(verdict.decision, "allow", command);
+  }
 });
 
 test("bypass guard: a 'safe' first segment cannot smuggle a dangerous second segment", async () => {

@@ -90,7 +90,7 @@ function hookRun(): { wallMedian: number; coldMedian: number } {
         encoding: "utf8",
       });
       walls.push(performance.now() - start);
-      if (res.status !== 0 || !res.stdout.includes('"permissionDecision":"block"')) {
+      if (res.status !== 0 || !res.stdout.includes('"permissionDecision":"deny"')) {
         console.error(`bench: hook run did not block as expected (status ${res.status})`);
         console.error(res.stderr);
         process.exit(1);

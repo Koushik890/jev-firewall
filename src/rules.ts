@@ -46,6 +46,12 @@ function isPrintCarrier(segment: string): boolean {
 
 export async function applyRules(action: AgentAction, config: FirewallConfig): Promise<RulesResult> {
   const resolved = await resolveCommand(action.command);
+  // Assignment normalization can omit an attached redirection entirely.
+  // Such a lossy representation must never let a model's allow authorize
+  // the original, state-changing command without a human decision.
+  if (/[<>]/.test(action.command) && !/[<>]/.test(resolved.resolvedText)) {
+    resolved.opaque = true;
+  }
   const contributions: Contribution[] = [];
 
   // 1. blocked_paths regexes: raw + resolved line + decoded payloads.
@@ -87,15 +93,16 @@ export async function applyRules(action: AgentAction, config: FirewallConfig): P
     return { verdict: { decision: "block", contributions, latencyMs: 0 }, resolved };
   }
 
-  // User-delegated allow: every segment exactly safe, nothing decoded, not
-  // opaque. Trailing redirections (both `>f` and `> f`) are stripped first.
-  const stripRedirect = (s: string) => s.replace(/\s*(>>?|<)\s*\S+$/, "").trim();
-  const nonTrivialSegments = resolved.segments.filter((s) => stripRedirect(s) !== "");
+  // Redirections can change files even when the executable is read-only.
+  // Check raw input too: normalization may consume assignment-only segments
+  // such as `X=1>file; git status`. Ambiguous quoted operators also delegate.
+  const nonTrivialSegments = resolved.segments.filter((s) => s.trim() !== "");
   if (
     !resolved.opaque &&
+    !/[<>]/.test(action.command) &&
     nonTrivialSegments.length > 0 &&
     resolved.decoded.length === 0 &&
-    nonTrivialSegments.every((seg) => config.safeCommands.includes(stripRedirect(seg)))
+    nonTrivialSegments.every((seg) => config.safeCommands.includes(seg.trim()))
   ) {
     return { verdict: { decision: "allow", contributions: [{ decision: "allow", reason: "user-delegated safe command", source: "config" }], latencyMs: 0 }, resolved };
   }

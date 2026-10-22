@@ -136,6 +136,8 @@ test("claude adapter: payload → action mapping and response shape", () => {
   const out = claudeResponse("ask", "why");
   assert.equal(out.hookSpecificOutput.hookEventName, "PreToolUse");
   assert.equal(out.hookSpecificOutput.permissionDecision, "ask");
+  assert.equal(claudeResponse("block", "blocked").hookSpecificOutput.permissionDecision, "deny");
+  assert.equal(claudeResponse("allow", "safe").hookSpecificOutput.permissionDecision, "allow");
 });
 
 test("hook loop: end-to-end stdin/stdout, one JSON decision per event", async () => {
@@ -155,7 +157,7 @@ test("hook loop: end-to-end stdin/stdout, one JSON decision per event", async ()
   assert.equal(lines.length, 2);
   const first = JSON.parse(lines[0]);
   const second = JSON.parse(lines[1]);
-  assert.equal(first.hookSpecificOutput.permissionDecision, "block");
+  assert.equal(first.hookSpecificOutput.permissionDecision, "deny");
   assert.equal(second.hookSpecificOutput.permissionDecision, "allow");
   await done;
 });
